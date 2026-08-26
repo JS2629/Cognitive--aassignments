@@ -1,0 +1,73 @@
+import pandas as pd
+
+roll = input("Roll number: ")
+cat = ["billing", "account", "general"]
+
+fixed = [
+    ["what is the annual fee", "The annual fee is Rs 500.", "fee cost price charge", "billing"],
+    ["how to reset password", "Go to Settings > Reset Password.", "password reset login", "account"],
+    ["what are your working hours", "We are open 9 AM to 5 PM.", "hours timing open time", "general"],
+    ["how can i pay the fee", "Pay using UPI, card, or net banking.", "pay payment upi fee", "billing"]
+]
+
+personal = []
+
+for d in roll[-2:]:
+    c = cat[int(d) % 3]
+    if c == "billing":
+        q, a, k = "how can i check payment status", "Check it in the payment section.", "payment status transaction"
+    elif c == "account":
+        q, a, k = "how do i update mobile number", "Update it in account settings.", "mobile update account"
+    else:
+        q, a, k = "how can i contact support", "Contact support through help.", "support help contact"
+    personal.append([q, a, k, c])
+
+df = pd.DataFrame(fixed + personal, columns=["question", "answer", "keywords", "category"])
+
+print("\nQ1 - Final DataFrame")
+print(df)
+
+def score(query):
+    words = query.lower().split()
+    result = []
+    for _, row in df.iterrows():
+        s = sum(w in row["keywords"].lower().split() for w in words)
+        if s:
+            result.append((s, row["question"]))
+    for x in sorted(result, reverse=True):
+        print(x)
+
+print("\nQ2 - Scoring")
+score("fee payment")
+
+def same_category(c, df):
+    return df[df["category"] == c]
+
+print("\nQ3 - Same Category")
+print(same_category(df.iloc[4]["category"], df))
+
+new = input("\nEnter new keyword: ")
+df.loc[0, "keywords"] += " " + new
+filename = roll + "_faq_data.csv"
+df.to_csv(filename, index=False)
+print("CSV saved as:", filename)
+
+print("\nQ5 - Category Count")
+print(df.groupby("category").size())
+
+def tie_score(query):
+    words = query.lower().split()
+    scores = []
+    for _, row in df.iterrows():
+        s = sum(w in row["keywords"].lower().split() for w in words)
+        scores.append((s, row["question"]))
+    highest = max(x[0] for x in scores)
+    for x in scores:
+        if x[0] == highest and highest > 0:
+            print(x)
+
+print("\nQ6 - Tie Example")
+tie_score("fee")
+
+print("\nQ6 - Non-Tie Example")
+tie_score("password")
